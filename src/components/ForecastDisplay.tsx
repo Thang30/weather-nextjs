@@ -3,6 +3,7 @@
 import { ForecastData } from '@/types';
 import { TemperatureDisplay } from '@/components/UnitDisplay';
 import { formatDay, formatTime } from '@/utils/dateUtils';
+import Image from 'next/image';
 
 interface ForecastDisplayProps {
   forecast: ForecastData;
@@ -29,10 +30,12 @@ export function ForecastDisplay({ forecast }: ForecastDisplayProps) {
                   {formatTime(item.dt)}
                 </p>
               </div>
-              <img 
+              <Image 
                 src={`https://openweathermap.org/img/wn/${item.weather[0].icon}@2x.png`}
                 alt={item.weather[0].description}
-                className="w-12 h-12"
+                width={40}
+                height={40}
+                className="-ml-2"
               />
             </div>
             <div className="mt-2">

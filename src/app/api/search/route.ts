@@ -1,7 +1,12 @@
 import { NextResponse } from 'next/server';
+import { LocationData } from '@/types';
 
-const OPENWEATHER_API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY;
-const GEOCODING_API_URL = 'http://api.openweathermap.org/geo/1.0/direct';
+interface GeocodingResponse {
+  name: string;
+  country: string;
+  lat: number;
+  lon: number;
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -14,38 +19,28 @@ export async function GET(request: Request) {
     );
   }
 
-  if (!OPENWEATHER_API_KEY) {
-    return NextResponse.json(
-      { error: 'OpenWeather API key is not configured' },
-      { status: 500 }
-    );
-  }
-
   try {
     const response = await fetch(
-      `${GEOCODING_API_URL}?q=${encodeURIComponent(query)}&limit=5&appid=${OPENWEATHER_API_KEY}`
+      `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(query)}&limit=5&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`
     );
 
     if (!response.ok) {
-      throw new Error('Failed to fetch location data');
+      throw new Error('Failed to fetch locations');
     }
 
-    const data = await response.json();
-    
-    // Transform the data to match our LocationData interface
-    const locations = data.map((item: any) => ({
+    const data = (await response.json()) as GeocodingResponse[];
+    const locations: LocationData[] = data.map(item => ({
       name: item.name,
       country: item.country,
       lat: item.lat,
-      lon: item.lon,
+      lon: item.lon
     }));
 
     return NextResponse.json(locations);
   } catch (error) {
-    console.error('Location search error:', error);
-    return NextResponse.json(
-      { error: 'Failed to search locations' },
-      { status: 500 }
-    );
+    if (error instanceof Error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    return NextResponse.json({ error: 'An unknown error occurred' }, { status: 500 });
   }
 } 

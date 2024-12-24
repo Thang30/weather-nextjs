@@ -1,7 +1,17 @@
 import { NextResponse } from 'next/server';
 
-const OPENWEATHER_API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY;
-const FORECAST_API_URL = 'https://api.openweathermap.org/data/2.5/forecast';
+interface ForecastItem {
+  dt: number;
+  temp: number;
+  weather: Array<{
+    description: string;
+    icon: string;
+  }>;
+}
+
+interface ForecastResponse {
+  list: ForecastItem[];
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -17,33 +27,19 @@ export async function GET(request: Request) {
 
   try {
     const response = await fetch(
-      `${FORECAST_API_URL}?lat=${lat}&lon=${lon}&appid=${OPENWEATHER_API_KEY}&units=metric`
+      `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}&units=metric`
     );
 
     if (!response.ok) {
-      throw new Error('Failed to fetch forecast data');
+      throw new Error('Failed to fetch forecast');
     }
 
-    const data = await response.json();
-    
-    // Transform the data to match our ForecastData interface
-    const forecastData = {
-      list: data.list.map((item: any) => ({
-        dt: item.dt,
-        temp: Math.round(item.main.temp),
-        weather: item.weather.map((w: any) => ({
-          description: w.description,
-          icon: w.icon
-        }))
-      }))
-    };
-
-    return NextResponse.json(forecastData);
+    const data = (await response.json()) as ForecastResponse;
+    return NextResponse.json(data);
   } catch (error) {
-    console.error('Forecast API error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch forecast data' },
-      { status: 500 }
-    );
+    if (error instanceof Error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    return NextResponse.json({ error: 'An unknown error occurred' }, { status: 500 });
   }
 } 

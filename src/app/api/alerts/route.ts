@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
+import { WeatherAlert } from '@/types';
 
-const OPENWEATHER_API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY;
-const ONECALL_API_URL = 'https://api.openweathermap.org/data/3.0/onecall';
+interface AlertResponse {
+  alerts: WeatherAlert[];
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -17,41 +19,19 @@ export async function GET(request: Request) {
 
   try {
     const response = await fetch(
-      `${ONECALL_API_URL}?lat=${lat}&lon=${lon}&appid=${OPENWEATHER_API_KEY}&exclude=minutely,hourly,daily&units=metric`
+      `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}&exclude=current,minutely,hourly,daily`
     );
 
     if (!response.ok) {
-      throw new Error('Failed to fetch weather alerts');
+      throw new Error('Failed to fetch alerts');
     }
 
-    const data = await response.json();
-    
-    // Transform alerts data to match our interface
-    const alerts = data.alerts?.map((alert: any) => ({
-      senderName: alert.sender_name,
-      event: alert.event,
-      start: alert.start,
-      end: alert.end,
-      description: alert.description,
-      severity: getSeverity(alert.event.toLowerCase())
-    })) || [];
-
-    return NextResponse.json({ alerts });
+    const data = (await response.json()) as AlertResponse;
+    return NextResponse.json(data.alerts || []);
   } catch (error) {
-    console.error('Weather alerts error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch weather alerts' },
-      { status: 500 }
-    );
+    if (error instanceof Error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    return NextResponse.json({ error: 'An unknown error occurred' }, { status: 500 });
   }
-}
-
-function getSeverity(event: string): 'moderate' | 'severe' | 'extreme' {
-  if (event.includes('extreme') || event.includes('hurricane') || event.includes('tornado')) {
-    return 'extreme';
-  }
-  if (event.includes('severe') || event.includes('warning')) {
-    return 'severe';
-  }
-  return 'moderate';
 } 
