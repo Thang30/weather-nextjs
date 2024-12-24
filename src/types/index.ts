@@ -11,6 +11,7 @@ export interface WeatherData {
   visibility: number;
   sunrise?: number;
   sunset?: number;
+  alerts?: WeatherAlert[];
 }
 
 export interface ForecastData {
@@ -47,4 +48,13 @@ export interface UserPreferences {
     lat: number;
     lon: number;
   };
+}
+
+export interface WeatherAlert {
+  senderName: string;
+  event: string;
+  start: number;
+  end: number;
+  description: string;
+  severity: 'moderate' | 'severe' | 'extreme';
 } 

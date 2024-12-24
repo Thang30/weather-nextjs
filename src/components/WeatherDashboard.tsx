@@ -17,6 +17,7 @@ import { WeatherData, LocationData } from '@/types';
 import { useDebouncedCallback } from 'use-debounce';
 import { formatTime } from '@/utils/dateUtils';
 import { ForecastDisplay } from '@/components/ForecastDisplay';
+import { WeatherAlerts } from '@/components/WeatherAlerts';
 
 export function WeatherDashboard() {
   const { weatherData, forecastData, isLoading, error, fetchWeather, detectLocation, searchCity } = useWeather();
@@ -279,6 +280,14 @@ export function WeatherDashboard() {
                         <ForecastDisplay forecast={forecastData} />
                       </div>
                     </div>
+
+                    {weatherData && weatherData.alerts && (
+                      <div className="border-t border-gray-200 dark:border-gray-700">
+                        <div className="p-6">
+                          <WeatherAlerts alerts={weatherData.alerts} />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ) : null}
               </Suspense>
