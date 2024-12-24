@@ -11,6 +11,8 @@ import { TemperatureDisplay, WindSpeedDisplay } from '@/components/UnitDisplay';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { WeatherSkeleton } from '@/components/WeatherSkeleton';
 import { SearchSkeleton } from '@/components/SearchSkeleton';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { ErrorMessage } from '@/components/ErrorMessage';
 
 export function WeatherDashboard() {
   const { weatherData, forecastData, isLoading, error, fetchWeather, searchCity } = useWeather();
@@ -63,6 +65,13 @@ export function WeatherDashboard() {
     fetchWeather(lat, lon);
   };
 
+  const handleRetry = () => {
+    if (preferences.defaultLocation) {
+      const { lat, lon } = preferences.defaultLocation;
+      fetchWeather(lat, lon);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background-light dark:bg-background-dark transition-colors">
       {/* Header */}
@@ -85,97 +94,92 @@ export function WeatherDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Sidebar */}
           <div className="lg:col-span-4">
-            <Suspense fallback={<SearchSkeleton />}>
-              <div className="bg-surface-light dark:bg-surface-dark rounded-lg shadow p-4">
-                {/* Search */}
-                <div className="mb-6">
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                      placeholder="Search city..."
-                      className="w-full p-2 border rounded-md focus:ring-2 focus:ring-primary-light dark:focus:ring-primary-dark focus:border-transparent bg-white dark:bg-gray-700 text-text-light dark:text-text-dark"
-                    />
-                    <button
-                      onClick={handleSearch}
-                      disabled={isLoading}
-                      className="w-full sm:w-auto px-4 py-2 bg-primary-light dark:bg-primary-dark text-white rounded-md hover:bg-blue-600 dark:hover:bg-blue-600 transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isLoading ? (
-                        <span className="inline-flex items-center">
-                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                          </svg>
-                          Searching...
-                        </span>
-                      ) : (
-                        'Search'
-                      )}
-                    </button>
+            <ErrorBoundary>
+              <Suspense fallback={<SearchSkeleton />}>
+                <div className="bg-surface-light dark:bg-surface-dark rounded-lg shadow p-4">
+                  {/* Search */}
+                  <div className="mb-6">
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                        placeholder="Search city..."
+                        className="w-full p-2 border rounded-md focus:ring-2 focus:ring-primary-light dark:focus:ring-primary-dark focus:border-transparent bg-white dark:bg-gray-700 text-text-light dark:text-text-dark"
+                      />
+                      <button
+                        onClick={handleSearch}
+                        disabled={isLoading}
+                        className="w-full sm:w-auto px-4 py-2 bg-primary-light dark:bg-primary-dark text-white rounded-md hover:bg-blue-600 dark:hover:bg-blue-600 transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isLoading ? (
+                          <span className="inline-flex items-center">
+                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                            </svg>
+                            Searching...
+                          </span>
+                        ) : (
+                          'Search'
+                        )}
+                      </button>
+                    </div>
                   </div>
-                </div>
 
-                <LocationHistory onSelectLocation={handleLocationSelect} />
-              </div>
-            </Suspense>
+                  <LocationHistory onSelectLocation={handleLocationSelect} />
+                </div>
+              </Suspense>
+            </ErrorBoundary>
           </div>
 
           {/* Weather Display */}
           <div className="lg:col-span-8">
-            <Suspense fallback={<WeatherSkeleton />}>
-              {error && (
-                <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 rounded">
-                  <div className="flex">
-                    <div className="flex-shrink-0">
-                      <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm text-red-700 dark:text-red-200">{error}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {weatherData && !error && (
-                <div className="bg-surface-light dark:bg-surface-dark rounded-lg shadow overflow-hidden">
-                  {/* Current Weather */}
-                  <div className="p-6">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between">
-                      <div>
-                        <h2 className="text-3xl font-bold text-gray-900">{weatherData.location}</h2>
-                        <p className="mt-1 text-gray-500">{weatherData.condition}</p>
-                      </div>
-                      <div className="mt-4 sm:mt-0">
-                        <div className="text-4xl font-bold">
-                          <TemperatureDisplay value={weatherData.temperature} />
+            <ErrorBoundary>
+              <Suspense fallback={<WeatherSkeleton />}>
+                {error ? (
+                  <ErrorMessage
+                    title="Failed to load weather data"
+                    message={error}
+                    retry={handleRetry}
+                  />
+                ) : weatherData && (
+                  <div className="bg-surface-light dark:bg-surface-dark rounded-lg shadow overflow-hidden">
+                    {/* Current Weather */}
+                    <div className="p-6">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between">
+                        <div>
+                          <h2 className="text-3xl font-bold text-gray-900">{weatherData.location}</h2>
+                          <p className="mt-1 text-gray-500">{weatherData.condition}</p>
+                        </div>
+                        <div className="mt-4 sm:mt-0">
+                          <div className="text-4xl font-bold">
+                            <TemperatureDisplay value={weatherData.temperature} />
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Weather Details */}
-                    <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <p className="text-sm font-medium text-gray-500">Humidity</p>
-                        <p className="mt-1 text-2xl font-semibold">{weatherData.humidity}%</p>
-                      </div>
-                      {weatherData.windSpeed !== undefined && (
+                      {/* Weather Details */}
+                      <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                         <div className="bg-gray-50 rounded-lg p-4">
-                          <p className="text-sm font-medium text-gray-500">Wind Speed</p>
-                          <p className="mt-1 text-2xl font-semibold">
-                            <WindSpeedDisplay value={weatherData.windSpeed} />
-                          </p>
+                          <p className="text-sm font-medium text-gray-500">Humidity</p>
+                          <p className="mt-1 text-2xl font-semibold">{weatherData.humidity}%</p>
                         </div>
-                      )}
+                        {weatherData.windSpeed !== undefined && (
+                          <div className="bg-gray-50 rounded-lg p-4">
+                            <p className="text-sm font-medium text-gray-500">Wind Speed</p>
+                            <p className="mt-1 text-2xl font-semibold">
+                              <WindSpeedDisplay value={weatherData.windSpeed} />
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
-            </Suspense>
+                )}
+              </Suspense>
+            </ErrorBoundary>
           </div>
         </div>
       </main>
