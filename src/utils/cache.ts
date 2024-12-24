@@ -40,4 +40,16 @@ export const getCachedForecast = cache(async (lat: number, lon: number) => {
 export const getCachedLocation = cache(async (query: string) => {
   // Implementation will be added when API key is ready
   return null;
-}); 
+});
+
+export async function getWeatherFromCache(_lat: number, _lon: number) {
+  // Implementation
+}
+
+export async function getForecastFromCache(_lat: number, _lon: number) {
+  // Implementation
+}
+
+export async function getSearchResultsFromCache(_query: string) {
+  // Implementation
+} 
