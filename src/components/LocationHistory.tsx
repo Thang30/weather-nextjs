@@ -1,76 +1,81 @@
 'use client';
 
-import { useCallback, useState, useEffect } from 'react';
-import { LocationHistoryItem } from '@/types';
-import { getLocationHistory, removeFromLocationHistory, clearLocationHistory } from '@/utils/locationHistory';
+import { useState, useEffect } from 'react';
+import { LocationData, LocationHistoryItem } from '@/types';
+import { getLocationHistory } from '@/utils/locationHistory';
+import { formatDistanceToNow } from 'date-fns';
+import { TemperatureDisplay } from './UnitDisplay';
 
 interface LocationHistoryProps {
-  onSelectLocation: (lat: number, lon: number) => void;
+  onSelectLocation: (location: LocationData) => Promise<void>;
 }
 
 export function LocationHistory({ onSelectLocation }: LocationHistoryProps) {
   const [history, setHistory] = useState<LocationHistoryItem[]>([]);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setHistory(getLocationHistory());
+    setIsClient(true);
   }, []);
 
-  const handleRemoveLocation = useCallback((lat: number, lon: number) => {
-    removeFromLocationHistory(lat, lon);
-    setHistory(getLocationHistory());
-  }, []);
+  // Don't render anything during SSR
+  if (!isClient) {
+    return (
+      <div className="animate-pulse bg-gray-100 dark:bg-gray-800 rounded-lg p-4">
+        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-4"></div>
+        <div className="space-y-3">
+          <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded"></div>
+          <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded"></div>
+        </div>
+      </div>
+    );
+  }
 
-  const handleClearHistory = useCallback(() => {
-    clearLocationHistory();
-    setHistory([]);
-  }, []);
-
-  if (history.length === 0) return null;
+  if (!history.length) {
+    return (
+      <div className="text-sm text-gray-500 dark:text-gray-400">
+        No location history yet
+      </div>
+    );
+  }
 
   return (
-    <div className="mt-6">
-      <div className="flex justify-between items-center mb-3">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-          Location History
-        </h3>
-        <button
-          onClick={handleClearHistory}
-          className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-        >
-          Clear History
-        </button>
-      </div>
-      <div className="space-y-2 max-h-[400px] overflow-y-auto">
-        {history.map((item) => (
-          <div
+    <div>
+      <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">
+        Recent Locations
+      </h3>
+      <div className="space-y-2">
+        {history.map((item: LocationHistoryItem) => (
+          <button
             key={`${item.lat}-${item.lon}-${item.timestamp}`}
-            className="flex justify-between items-start p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors cursor-pointer"
-            onClick={() => onSelectLocation(item.lat, item.lon)}
+            onClick={() => onSelectLocation(item)}
+            className="w-full p-3 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
           >
-            <div className="flex-1 min-w-0">
-              <h4 className="font-medium text-gray-900 dark:text-gray-100 truncate">
-                {item.name}
-              </h4>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                {item.country}
-              </p>
+            <div className="flex justify-between items-start">
+              <div>
+                <div className="font-medium text-gray-900 dark:text-gray-100">
+                  {item.name}
+                </div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">
+                  {item.country}
+                </div>
+              </div>
               {item.lastWeather && (
-                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                  Last: {item.lastWeather.temperature}°C, {item.lastWeather.condition}
-                </p>
+                <div className="text-right">
+                  <div className="text-gray-900 dark:text-gray-100">
+                    <TemperatureDisplay value={item.lastWeather.temperature} />
+                  </div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                    {item.lastWeather.condition}
+                  </div>
+                </div>
               )}
             </div>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleRemoveLocation(item.lat, item.lon);
-              }}
-              className="ml-2 text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400 transition-colors"
-            >
-              <span className="sr-only">Remove</span>
-              ×
-            </button>
-          </div>
+            <div className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+              {formatDistanceToNow(item.timestamp)} ago
+            </div>
+          </button>
         ))}
       </div>
     </div>

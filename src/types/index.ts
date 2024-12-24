@@ -12,6 +12,25 @@ export interface WeatherData {
   sunrise?: number;
   sunset?: number;
   alerts?: WeatherAlert[];
+  airQuality?: {
+    aqi: number;  // 1-5 scale
+    components: {
+      co: number;   // Carbon monoxide (μg/m3)
+      no2: number;  // Nitrogen dioxide (μg/m3)
+      o3: number;   // Ozone (μg/m3)
+      pm2_5: number; // Fine particles (μg/m3)
+      pm10: number;  // Coarse particles (μg/m3)
+    };
+  };
+  precipitation?: {
+    probability: number; // 0-1
+    amount: number;     // mm
+  };
+  sun: {
+    sunrise: number;
+    sunset: number;
+    dayLength: number; // in minutes
+  };
 }
 
 export interface ForecastData {

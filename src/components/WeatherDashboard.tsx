@@ -13,11 +13,12 @@ import { WeatherSkeleton } from '@/components/WeatherSkeleton';
 import { SearchSkeleton } from '@/components/SearchSkeleton';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ErrorMessage } from '@/components/ErrorMessage';
-import { WeatherData, LocationData } from '@/types';
+import { WeatherData, LocationData, LocationHistoryItem } from '@/types';
 import { useDebouncedCallback } from 'use-debounce';
 import { formatTime } from '@/utils/dateUtils';
 import { ForecastDisplay } from '@/components/ForecastDisplay';
 import { WeatherAlerts } from '@/components/WeatherAlerts';
+import { AirQuality } from '@/components/AirQuality';
 
 export function WeatherDashboard() {
   const { weatherData, forecastData, isLoading, error, fetchWeather, detectLocation, searchCity } = useWeather();
@@ -67,14 +68,16 @@ export function WeatherDashboard() {
     setSearchResults([]);
     
     // Add to location history
-    addToLocationHistory({
+    const historyItem: LocationHistoryItem = {
       ...location,
+      timestamp: Date.now(),
       lastWeather: weatherData ? {
         temperature: weatherData.temperature,
         condition: weatherData.condition
       } : undefined
-    });
-
+    };
+    
+    addToLocationHistory(historyItem);
     await fetchWeather(location.lat, location.lon);
   };
 
@@ -258,16 +261,48 @@ export function WeatherDashboard() {
                           </p>
                         </div>
 
-                        {weatherData.sunrise && weatherData.sunset && (
-                          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 col-span-2 sm:col-span-1">
-                            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Sun</p>
-                            <div className="mt-1 space-y-1">
-                              <p className="text-gray-900 dark:text-gray-100">
-                                🌅 Rise: {formatTime(weatherData.sunrise)}
-                              </p>
-                              <p className="text-gray-900 dark:text-gray-100">
-                                🌇 Set: {formatTime(weatherData.sunset)}
-                              </p>
+                        {weatherData.airQuality && (
+                          <AirQuality {...weatherData.airQuality} />
+                        )}
+
+                        {weatherData.precipitation && (
+                          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                              Precipitation
+                            </h3>
+                            <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                              {Math.round(weatherData.precipitation.probability * 100)}%
+                            </div>
+                            <p className="text-sm text-gray-600 dark:text-gray-300">
+                              Expected: {weatherData.precipitation.amount}mm
+                            </p>
+                          </div>
+                        )}
+
+                        {weatherData.sun && (
+                          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                              Daylight
+                            </h3>
+                            <div className="space-y-2">
+                              <div className="flex justify-between items-center">
+                                <span className="text-gray-600 dark:text-gray-300">Sunrise</span>
+                                <span className="text-gray-900 dark:text-gray-100">
+                                  {formatTime(weatherData.sun.sunrise)}
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-gray-600 dark:text-gray-300">Sunset</span>
+                                <span className="text-gray-900 dark:text-gray-100">
+                                  {formatTime(weatherData.sun.sunset)}
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-gray-600 dark:text-gray-300">Day Length</span>
+                                <span className="text-gray-900 dark:text-gray-100">
+                                  {Math.floor(weatherData.sun.dayLength / 60)}h {weatherData.sun.dayLength % 60}m
+                                </span>
+                              </div>
                             </div>
                           </div>
                         )}

@@ -6,13 +6,15 @@ const HISTORY_KEY = 'weatherLocationHistory';
 const MAX_HISTORY_ITEMS = 5;
 
 export function getLocationHistory(): LocationHistoryItem[] {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === 'undefined') {
+    return [];
+  }
   
   try {
     const history = localStorage.getItem(HISTORY_KEY);
     return history ? JSON.parse(history) : [];
   } catch (error) {
-    console.error('Failed to parse location history:', error);
+    console.error('Failed to get location history:', error);
     return [];
   }
 }
