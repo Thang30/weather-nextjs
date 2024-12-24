@@ -4,6 +4,13 @@ export interface WeatherData {
   condition: string;
   humidity: number;
   windSpeed?: number;
+  feelsLike: number;
+  icon: string;
+  description: string;
+  pressure: number;
+  visibility: number;
+  sunrise?: number;
+  sunset?: number;
 }
 
 export interface ForecastData {

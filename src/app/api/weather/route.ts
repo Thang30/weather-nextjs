@@ -38,8 +38,15 @@ export async function GET(request: Request) {
       location: data.name,
       temperature: Math.round(data.main.temp),
       condition: data.weather[0].main,
+      description: data.weather[0].description,
       humidity: data.main.humidity,
-      windSpeed: data.wind.speed
+      windSpeed: data.wind.speed,
+      feelsLike: Math.round(data.main.feels_like),
+      icon: data.weather[0].icon,
+      pressure: data.main.pressure,
+      visibility: data.visibility / 1000, // Convert to kilometers
+      sunrise: data.sys.sunrise,
+      sunset: data.sys.sunset
     };
 
     return NextResponse.json(weatherData);

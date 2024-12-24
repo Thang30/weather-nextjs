@@ -15,6 +15,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ErrorMessage } from '@/components/ErrorMessage';
 import { WeatherData, LocationData } from '@/types';
 import { useDebouncedCallback } from 'use-debounce';
+import { formatTime } from '@/utils/dateUtils';
 
 export function WeatherDashboard() {
   const { weatherData, isLoading, error, fetchWeather, detectLocation, searchCity } = useWeather();
@@ -197,32 +198,75 @@ export function WeatherDashboard() {
                   />
                 ) : weatherData && (
                   <div className="bg-surface-light dark:bg-surface-dark rounded-lg shadow overflow-hidden">
-                    {/* Current Weather */}
                     <div className="p-6">
+                      {/* Current Weather Header */}
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between">
                         <div>
-                          <h2 className="text-3xl font-bold text-gray-900">{weatherData.location}</h2>
-                          <p className="mt-1 text-gray-500">{weatherData.condition}</p>
+                          <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                            {weatherData.location}
+                          </h2>
+                          <p className="mt-1 text-gray-500 dark:text-gray-400 flex items-center">
+                            <img 
+                              src={`https://openweathermap.org/img/wn/${weatherData.icon}@2x.png`}
+                              alt={weatherData.condition}
+                              className="w-10 h-10 -ml-2"
+                            />
+                            <span className="capitalize">{weatherData.description}</span>
+                          </p>
                         </div>
-                        <div className="mt-4 sm:mt-0">
-                          <div className="text-4xl font-bold">
+                        <div className="mt-4 sm:mt-0 text-right">
+                          <div className="text-4xl font-bold text-gray-900 dark:text-gray-100">
                             <TemperatureDisplay value={weatherData.temperature} />
                           </div>
+                          <p className="text-gray-500 dark:text-gray-400">
+                            Feels like <TemperatureDisplay value={weatherData.feelsLike} />
+                          </p>
                         </div>
                       </div>
 
-                      {/* Weather Details */}
+                      {/* Weather Details Grid */}
                       <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div className="bg-gray-50 rounded-lg p-4">
-                          <p className="text-sm font-medium text-gray-500">Humidity</p>
-                          <p className="mt-1 text-2xl font-semibold">{weatherData.humidity}%</p>
+                        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Humidity</p>
+                          <p className="mt-1 text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                            {weatherData.humidity}%
+                          </p>
                         </div>
+
                         {weatherData.windSpeed !== undefined && (
-                          <div className="bg-gray-50 rounded-lg p-4">
-                            <p className="text-sm font-medium text-gray-500">Wind Speed</p>
-                            <p className="mt-1 text-2xl font-semibold">
+                          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Wind Speed</p>
+                            <p className="mt-1 text-2xl font-semibold text-gray-900 dark:text-gray-100">
                               <WindSpeedDisplay value={weatherData.windSpeed} />
                             </p>
+                          </div>
+                        )}
+
+                        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Pressure</p>
+                          <p className="mt-1 text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                            {weatherData.pressure} hPa
+                          </p>
+                        </div>
+
+                        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Visibility</p>
+                          <p className="mt-1 text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                            {weatherData.visibility} km
+                          </p>
+                        </div>
+
+                        {weatherData.sunrise && weatherData.sunset && (
+                          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 col-span-2 sm:col-span-1">
+                            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Sun</p>
+                            <div className="mt-1 space-y-1">
+                              <p className="text-gray-900 dark:text-gray-100">
+                                🌅 Rise: {formatTime(weatherData.sunrise)}
+                              </p>
+                              <p className="text-gray-900 dark:text-gray-100">
+                                🌇 Set: {formatTime(weatherData.sunset)}
+                              </p>
+                            </div>
                           </div>
                         )}
                       </div>
