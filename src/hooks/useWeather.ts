@@ -68,11 +68,27 @@ export function useWeather() {
     }
   }, [fetchWeather]);
 
+  const searchCity = useCallback(async (query: string): Promise<LocationData[]> => {
+    try {
+      const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to search location');
+      }
+
+      return await response.json();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to search location');
+      return [];
+    }
+  }, []);
+
   return {
     weatherData,
     isLoading,
     error,
     fetchWeather,
-    detectLocation
+    detectLocation,
+    searchCity,
   };
 } 

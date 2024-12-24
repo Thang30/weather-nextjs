@@ -14,10 +14,13 @@ import { SearchSkeleton } from '@/components/SearchSkeleton';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ErrorMessage } from '@/components/ErrorMessage';
 import { WeatherData, LocationData } from '@/types';
+import { useDebouncedCallback } from 'use-debounce';
 
 export function WeatherDashboard() {
-  const { weatherData, isLoading, error, fetchWeather, detectLocation } = useWeather();
+  const { weatherData, isLoading, error, fetchWeather, detectLocation, searchCity } = useWeather();
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<LocationData[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const { preferences } = usePreferences();
 
   // Use default location from preferences if available
@@ -39,44 +42,37 @@ export function WeatherDashboard() {
     return celsius;
   };
 
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) return;
-
-    try {
-      // Instead of using searchCity, make a direct API call
-      const response = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`);
-      if (!response.ok) {
-        throw new Error('Failed to search location');
-      }
-
-      const locations: LocationData[] = await response.json();
-      
-      if (locations.length > 0) {
-        const { lat, lon, name, country } = locations[0];
-        
-        // Add to location history with current weather
-        addToLocationHistory({
-          name,
-          country,
-          lat,
-          lon,
-          lastWeather: weatherData ? {
-            temperature: weatherData.temperature,
-            condition: weatherData.condition
-          } : undefined
-        });
-
-        fetchWeather(lat, lon);
-        setSearchQuery('');
-      }
-    } catch (err) {
-      // Handle error appropriately
-      console.error('Search failed:', err);
+  const handleSearch = useDebouncedCallback(async (term: string) => {
+    if (!term.trim()) {
+      setSearchResults([]);
+      return;
     }
-  };
 
-  const handleLocationSelect = (lat: number, lon: number) => {
-    fetchWeather(lat, lon);
+    setIsSearching(true);
+    try {
+      const locations = await searchCity(term);
+      setSearchResults(locations);
+    } catch (err) {
+      console.error('Search failed:', err);
+    } finally {
+      setIsSearching(false);
+    }
+  }, 300);
+
+  const handleLocationSelect = async (location: LocationData) => {
+    setSearchQuery('');
+    setSearchResults([]);
+    
+    // Add to location history
+    addToLocationHistory({
+      ...location,
+      lastWeather: weatherData ? {
+        temperature: weatherData.temperature,
+        condition: weatherData.condition
+      } : undefined
+    });
+
+    await fetchWeather(location.lat, location.lon);
   };
 
   const handleRetry = () => {
@@ -138,33 +134,48 @@ export function WeatherDashboard() {
                       )}
                     </button>
 
-                    {/* Existing Search Input */}
-                    <div className="flex flex-col sm:flex-row gap-2">
+                    <div className="relative">
                       <input
                         type="text"
                         value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                        onChange={(e) => {
+                          setSearchQuery(e.target.value);
+                          handleSearch(e.target.value);
+                        }}
                         placeholder="Search city..."
                         className="w-full p-2 border rounded-md focus:ring-2 focus:ring-primary-light dark:focus:ring-primary-dark focus:border-transparent bg-white dark:bg-gray-700 text-text-light dark:text-text-dark"
                       />
-                      <button
-                        onClick={handleSearch}
-                        disabled={isLoading}
-                        className="w-full sm:w-auto px-4 py-2 bg-primary-light dark:bg-primary-dark text-white rounded-md hover:bg-blue-600 dark:hover:bg-blue-600 transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {isLoading ? (
-                          <span className="inline-flex items-center">
-                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      
+                      {/* Search Results Dropdown */}
+                      {searchResults.length > 0 && searchQuery && (
+                        <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 rounded-md shadow-lg max-h-60 overflow-auto">
+                          {searchResults.map((location) => (
+                            <button
+                              key={`${location.lat}-${location.lon}`}
+                              onClick={() => handleLocationSelect(location)}
+                              className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                            >
+                              <div className="font-medium text-gray-900 dark:text-gray-100">
+                                {location.name}
+                              </div>
+                              <div className="text-sm text-gray-500 dark:text-gray-400">
+                                {location.country}
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {isSearching && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                          <div className="animate-spin h-5 w-5 text-gray-400">
+                            <svg className="h-5 w-5" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                             </svg>
-                            Searching...
-                          </span>
-                        ) : (
-                          'Search'
-                        )}
-                      </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
