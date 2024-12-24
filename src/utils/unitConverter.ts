@@ -21,7 +21,9 @@ export const UnitConverter = {
     msToMph: (ms: number): number => {
       return ms * 2.237;
     },
-    format: (value: number, unit: SpeedUnit): string => {
+    format: (value: number | undefined, unit: SpeedUnit): string => {
+      if (value === undefined || value === null) return 'N/A';
+      
       switch (unit) {
         case 'ms':
           return `${value.toFixed(1)} m/s`;

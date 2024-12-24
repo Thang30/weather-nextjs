@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useCallback } from 'react';
 import { fetchWeatherData, fetchForecast, searchLocation } from '@/utils/api';
 import { WeatherData, ForecastData, LocationData } from '@/types';

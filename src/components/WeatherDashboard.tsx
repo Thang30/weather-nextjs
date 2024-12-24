@@ -1,3 +1,5 @@
+'use client';
+
 import { useWeather } from '@/hooks/useWeather';
 import { useEffect, useState } from 'react';
 import { LocationHistory } from '@/components/LocationHistory';
@@ -92,7 +94,9 @@ export function WeatherDashboard() {
           <p>Temperature: <TemperatureDisplay value={weatherData.temperature} /></p>
           <p>Condition: {weatherData.condition}</p>
           <p>Humidity: {weatherData.humidity}%</p>
-          <p>Wind Speed: <WindSpeedDisplay value={weatherData.windSpeed} /></p>
+          {weatherData.windSpeed !== undefined && (
+            <p>Wind Speed: <WindSpeedDisplay value={weatherData.windSpeed} /></p>
+          )}
         </div>
       )}
 

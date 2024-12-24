@@ -9,7 +9,7 @@ interface TemperatureDisplayProps {
 }
 
 interface WindSpeedDisplayProps {
-  value: number;
+  value: number | undefined;
   className?: string;
 }
 
