@@ -20,10 +20,10 @@ export async function GET(request: Request) {
     const [weatherResponse, airQualityResponse] = await Promise.all([
       fetch(
         `${WEATHER_API_URL}?lat=${lat}&lon=${lon}&appid=${OPENWEATHER_API_KEY}&units=metric`
-      ).catch(() => ({ ok: false })),
+      ),
       fetch(
         `${AIR_QUALITY_API_URL}?lat=${lat}&lon=${lon}&appid=${OPENWEATHER_API_KEY}`
-      ).catch(() => ({ ok: false }))
+      )
     ]);
 
     const [weather, airQuality] = await Promise.all([

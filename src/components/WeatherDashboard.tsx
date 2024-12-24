@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense } from 'react';
+import { JSX, Suspense } from 'react';
 import { useWeather } from '@/hooks/useWeather';
 import { useEffect, useState } from 'react';
 import { LocationHistory } from '@/components/LocationHistory';
@@ -17,10 +17,9 @@ import { WeatherData, LocationData, LocationHistoryItem } from '@/types';
 import { useDebouncedCallback } from 'use-debounce';
 import { formatTime } from '@/utils/dateUtils';
 import { ForecastDisplay } from '@/components/ForecastDisplay';
-import { WeatherAlerts } from '@/components/WeatherAlerts';
 import { AirQuality } from '@/components/AirQuality';
 
-export function WeatherDashboard() {
+export function WeatherDashboard(): JSX.Element {
   const { weatherData, forecastData, isLoading, error, fetchWeather, detectLocation, searchCity } = useWeather();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<LocationData[]>([]);
@@ -276,7 +275,6 @@ export function WeatherDashboard() {
 
                           {weatherData.airQuality && (
                             <div>
-                              {console.log('Air Quality Data in UI:', weatherData.airQuality)}
                               <AirQuality 
                                 aqi={weatherData.airQuality.aqi} 
                                 components={weatherData.airQuality.components} 
@@ -331,14 +329,6 @@ export function WeatherDashboard() {
                         <ForecastDisplay forecast={forecastData} />
                       </div>
                     </div>
-
-                    {weatherData && weatherData.alerts && (
-                      <div className="border-t border-gray-200 dark:border-gray-700">
-                        <div className="p-6">
-                          <WeatherAlerts alerts={weatherData.alerts} />
-                        </div>
-                      </div>
-                    )}
                   </div>
                 ) : null}
               </Suspense>

@@ -17,12 +17,10 @@ export async function GET(request: Request) {
   }
 
   try {
-    // Get headers in a type-safe way
-    const headersList = headers();
+    const headersList = await headers();
     const host = headersList.get('host') || 'localhost:3000';
     const protocol = process.env.NODE_ENV === 'development' ? 'http' : 'https';
 
-    // Fetch both basic and extended data
     const [weatherResponse, extendedResponse] = await Promise.all([
       fetch(
         `${OPENWEATHER_API_URL}?lat=${lat}&lon=${lon}&appid=${OPENWEATHER_API_KEY}&units=metric`
@@ -35,7 +33,6 @@ export async function GET(request: Request) {
       extendedResponse.ok ? extendedResponse.json() : null
     ]);
 
-    // Transform the data to match our WeatherData interface
     const weatherData = {
       location: data.name,
       temperature: Math.round(data.main.temp),
@@ -49,7 +46,6 @@ export async function GET(request: Request) {
       visibility: data.visibility / 1000,
       sunrise: data.sys.sunrise,
       sunset: data.sys.sunset,
-      // Add extended data if available
       ...(extendedData && {
         airQuality: extendedData.airQuality,
         precipitation: extendedData.precipitation,
