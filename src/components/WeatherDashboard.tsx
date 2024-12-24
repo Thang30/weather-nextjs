@@ -13,9 +13,10 @@ import { WeatherSkeleton } from '@/components/WeatherSkeleton';
 import { SearchSkeleton } from '@/components/SearchSkeleton';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ErrorMessage } from '@/components/ErrorMessage';
+import { WeatherData, LocationData } from '@/types';
 
 export function WeatherDashboard() {
-  const { weatherData, forecastData, isLoading, error, fetchWeather, searchCity } = useWeather();
+  const { weatherData, isLoading, error, fetchWeather, detectLocation } = useWeather();
   const [searchQuery, setSearchQuery] = useState('');
   const { preferences } = usePreferences();
 
@@ -25,8 +26,9 @@ export function WeatherDashboard() {
       const { lat, lon } = preferences.defaultLocation;
       fetchWeather(lat, lon);
     } else {
-      // Fallback to London
-      fetchWeather(51.5074, -0.1278);
+      // Start of Selection
+      // Fallback to Helsinki
+      fetchWeather(60.1699, 24.9384);
     }
   }, [fetchWeather, preferences.defaultLocation]);
 
@@ -40,24 +42,36 @@ export function WeatherDashboard() {
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
 
-    const locations = await searchCity(searchQuery);
-    if (locations.length > 0) {
-      const { lat, lon, name, country } = locations[0];
-      
-      // Add to location history with current weather
-      addToLocationHistory({
-        name,
-        country,
-        lat,
-        lon,
-        lastWeather: weatherData ? {
-          temperature: weatherData.temperature,
-          condition: weatherData.condition
-        } : undefined
-      });
+    try {
+      // Instead of using searchCity, make a direct API call
+      const response = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`);
+      if (!response.ok) {
+        throw new Error('Failed to search location');
+      }
 
-      fetchWeather(lat, lon);
-      setSearchQuery('');
+      const locations: LocationData[] = await response.json();
+      
+      if (locations.length > 0) {
+        const { lat, lon, name, country } = locations[0];
+        
+        // Add to location history with current weather
+        addToLocationHistory({
+          name,
+          country,
+          lat,
+          lon,
+          lastWeather: weatherData ? {
+            temperature: weatherData.temperature,
+            condition: weatherData.condition
+          } : undefined
+        });
+
+        fetchWeather(lat, lon);
+        setSearchQuery('');
+      }
+    } catch (err) {
+      // Handle error appropriately
+      console.error('Search failed:', err);
     }
   };
 
@@ -98,38 +112,64 @@ export function WeatherDashboard() {
               <div className="bg-surface-light dark:bg-surface-dark rounded-lg shadow p-4">
                 {/* Search */}
                 <div className="mb-6">
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                      placeholder="Search city..."
-                      className="w-full p-2 border rounded-md focus:ring-2 focus:ring-primary-light dark:focus:ring-primary-dark focus:border-transparent bg-white dark:bg-gray-700 text-text-light dark:text-text-dark"
-                    />
+                  <div className="flex flex-col gap-2">
+                    {/* Location Detection Button */}
                     <button
-                      onClick={handleSearch}
+                      onClick={() => detectLocation()}
                       disabled={isLoading}
-                      className="w-full sm:w-auto px-4 py-2 bg-primary-light dark:bg-primary-dark text-white rounded-md hover:bg-blue-600 dark:hover:bg-blue-600 transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full px-4 py-2 bg-primary-light dark:bg-primary-dark text-white rounded-md hover:bg-blue-600 dark:hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                       {isLoading ? (
-                        <span className="inline-flex items-center">
-                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <>
+                          <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                           </svg>
-                          Searching...
-                        </span>
+                          Detecting...
+                        </>
                       ) : (
-                        'Search'
+                        <>
+                          <svg className="w-5 h-5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                            <path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                          Use My Location
+                        </>
                       )}
                     </button>
+
+                    {/* Existing Search Input */}
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                        placeholder="Search city..."
+                        className="w-full p-2 border rounded-md focus:ring-2 focus:ring-primary-light dark:focus:ring-primary-dark focus:border-transparent bg-white dark:bg-gray-700 text-text-light dark:text-text-dark"
+                      />
+                      <button
+                        onClick={handleSearch}
+                        disabled={isLoading}
+                        className="w-full sm:w-auto px-4 py-2 bg-primary-light dark:bg-primary-dark text-white rounded-md hover:bg-blue-600 dark:hover:bg-blue-600 transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isLoading ? (
+                          <span className="inline-flex items-center">
+                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                            </svg>
+                            Searching...
+                          </span>
+                        ) : (
+                          'Search'
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
 
-                <Suspense fallback={null}>
-                  <LocationHistory onSelectLocation={handleLocationSelect} />
-                </Suspense>
+                <LocationHistory onSelectLocation={handleLocationSelect} />
               </div>
             </ErrorBoundary>
           </div>

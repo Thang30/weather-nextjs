@@ -1,55 +1,78 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { fetchWeatherData, fetchForecast, searchLocation } from '@/utils/api';
-import { WeatherData, ForecastData, LocationData } from '@/types';
+import { WeatherData, LocationData } from '@/types';
 
 export function useWeather() {
+  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
-  const [forecastData, setForecastData] = useState<ForecastData | null>(null);
 
-  // Function to fetch both current weather and forecast
   const fetchWeather = useCallback(async (lat: number, lon: number) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      // Fetch both current weather and forecast in parallel
-      const [weather, forecast] = await Promise.all([
-        fetchWeatherData(lat, lon),
-        fetchForecast(lat, lon)
-      ]);
+      const response = await fetch(
+        `/api/weather?lat=${lat}&lon=${lon}`
+      );
 
-      setWeatherData(weather);
-      setForecastData(forecast);
+      if (!response.ok) {
+        throw new Error('Failed to fetch weather data');
+      }
+
+      const data = await response.json();
+      setWeatherData(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch weather data');
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  // Function to search for a location
-  const searchCity = useCallback(async (query: string): Promise<LocationData[]> => {
-    setError(null);
+  const detectLocation = useCallback(async () => {
+    if (!navigator.geolocation) {
+      setError('Geolocation is not supported by your browser');
+      return;
+    }
 
     try {
-      const locations = await searchLocation(query);
-      return locations;
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 0
+        });
+      });
+
+      const { latitude, longitude } = position.coords;
+      await fetchWeather(latitude, longitude);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to search location');
-      return [];
+      if (err instanceof GeolocationPositionError) {
+        switch (err.code) {
+          case err.PERMISSION_DENIED:
+            setError('Please allow location access to use this feature');
+            break;
+          case err.POSITION_UNAVAILABLE:
+            setError('Location information is unavailable');
+            break;
+          case err.TIMEOUT:
+            setError('Location request timed out');
+            break;
+          default:
+            setError('An error occurred while getting your location');
+        }
+      } else {
+        setError('Failed to detect location');
+      }
     }
-  }, []);
+  }, [fetchWeather]);
 
   return {
     weatherData,
-    forecastData,
     isLoading,
     error,
     fetchWeather,
-    searchCity,
+    detectLocation
   };
 } 

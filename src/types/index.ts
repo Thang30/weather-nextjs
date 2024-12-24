@@ -1,10 +1,9 @@
 export interface WeatherData {
+  location: string;
   temperature: number;
   condition: string;
   humidity: number;
   windSpeed?: number;
-  icon: string;
-  location: string;
 }
 
 export interface ForecastData {
@@ -20,19 +19,25 @@ export interface ForecastData {
 
 export interface LocationData {
   name: string;
+  country: string;
   lat: number;
   lon: number;
-  country: string;
 }
 
-export interface LocationHistoryItem {
-  name: string;
-  country: string;
-  lat: number;
-  lon: number;
+export interface LocationHistoryItem extends LocationData {
   timestamp: number;
   lastWeather?: {
     temperature: number;
     condition: string;
+  };
+}
+
+export interface UserPreferences {
+  temperatureUnit: 'celsius' | 'fahrenheit';
+  speedUnit: 'ms' | 'kmh' | 'mph';
+  theme: 'light' | 'dark';
+  defaultLocation?: {
+    lat: number;
+    lon: number;
   };
 } 
