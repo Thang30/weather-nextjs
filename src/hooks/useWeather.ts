@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { WeatherData, LocationData } from '@/types';
+import { WeatherData, LocationData, ForecastData } from '@/types';
 
 export function useWeather() {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
+  const [forecastData, setForecastData] = useState<ForecastData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -13,16 +14,22 @@ export function useWeather() {
     setError(null);
 
     try {
-      const response = await fetch(
-        `/api/weather?lat=${lat}&lon=${lon}`
-      );
+      const [weatherResponse, forecastResponse] = await Promise.all([
+        fetch(`/api/weather?lat=${lat}&lon=${lon}`),
+        fetch(`/api/forecast?lat=${lat}&lon=${lon}`)
+      ]);
 
-      if (!response.ok) {
+      if (!weatherResponse.ok || !forecastResponse.ok) {
         throw new Error('Failed to fetch weather data');
       }
 
-      const data = await response.json();
-      setWeatherData(data);
+      const [weather, forecast] = await Promise.all([
+        weatherResponse.json(),
+        forecastResponse.json()
+      ]);
+
+      setWeatherData(weather);
+      setForecastData(forecast);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -85,6 +92,7 @@ export function useWeather() {
 
   return {
     weatherData,
+    forecastData,
     isLoading,
     error,
     fetchWeather,

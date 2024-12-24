@@ -16,9 +16,10 @@ import { ErrorMessage } from '@/components/ErrorMessage';
 import { WeatherData, LocationData } from '@/types';
 import { useDebouncedCallback } from 'use-debounce';
 import { formatTime } from '@/utils/dateUtils';
+import { ForecastDisplay } from '@/components/ForecastDisplay';
 
 export function WeatherDashboard() {
-  const { weatherData, isLoading, error, fetchWeather, detectLocation, searchCity } = useWeather();
+  const { weatherData, forecastData, isLoading, error, fetchWeather, detectLocation, searchCity } = useWeather();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<LocationData[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -196,7 +197,7 @@ export function WeatherDashboard() {
                     message={error}
                     retry={handleRetry}
                   />
-                ) : weatherData && (
+                ) : weatherData && forecastData ? (
                   <div className="bg-surface-light dark:bg-surface-dark rounded-lg shadow overflow-hidden">
                     <div className="p-6">
                       {/* Current Weather Header */}
@@ -271,8 +272,15 @@ export function WeatherDashboard() {
                         )}
                       </div>
                     </div>
+
+                    {/* Forecast section */}
+                    <div className="border-t border-gray-200 dark:border-gray-700">
+                      <div className="p-6">
+                        <ForecastDisplay forecast={forecastData} />
+                      </div>
+                    </div>
                   </div>
-                )}
+                ) : null}
               </Suspense>
             </ErrorBoundary>
           </div>
