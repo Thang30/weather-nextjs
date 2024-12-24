@@ -1,5 +1,7 @@
 import { useWeather } from '@/hooks/useWeather';
 import { useEffect, useState } from 'react';
+import { SearchHistory } from '@/components/SearchHistory';
+import { addToSearchHistory } from '@/utils/searchHistory';
 
 export function WeatherDashboard() {
   const { weatherData, forecastData, isLoading, error, fetchWeather, searchCity } = useWeather();
@@ -11,15 +13,27 @@ export function WeatherDashboard() {
   }, [fetchWeather]);
 
   const handleSearch = async () => {
+    if (!searchQuery.trim()) return;
+
     const locations = await searchCity(searchQuery);
     if (locations.length > 0) {
-      const { lat, lon } = locations[0];
+      const { lat, lon, name } = locations[0];
+      
+      // Add to search history
+      addToSearchHistory({
+        query: name,
+        lat,
+        lon
+      });
+
       fetchWeather(lat, lon);
+      setSearchQuery('');
     }
   };
 
-  if (isLoading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
+  const handleLocationSelect = (lat: number, lon: number) => {
+    fetchWeather(lat, lon);
+  };
 
   return (
     <div className="p-4">
@@ -28,6 +42,7 @@ export function WeatherDashboard() {
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
           placeholder="Search city..."
           className="p-2 border rounded"
         />
@@ -39,9 +54,14 @@ export function WeatherDashboard() {
         </button>
       </div>
 
+      <SearchHistory onSelectLocation={handleLocationSelect} />
+
+      {isLoading && <div>Loading...</div>}
+      {error && <div className="text-red-500">Error: {error}</div>}
+
       {weatherData && (
-        <div className="weather-info">
-          <h2>{weatherData.location}</h2>
+        <div className="weather-info mt-4">
+          <h2 className="text-2xl font-bold">{weatherData.location}</h2>
           <p>Temperature: {weatherData.temperature}°C</p>
           <p>Condition: {weatherData.condition}</p>
           <p>Humidity: {weatherData.humidity}%</p>
