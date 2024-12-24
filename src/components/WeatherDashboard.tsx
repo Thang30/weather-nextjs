@@ -1,7 +1,7 @@
 import { useWeather } from '@/hooks/useWeather';
 import { useEffect, useState } from 'react';
-import { SearchHistory } from '@/components/SearchHistory';
-import { addToSearchHistory } from '@/utils/searchHistory';
+import { LocationHistory } from '@/components/LocationHistory';
+import { addToLocationHistory } from '@/utils/locationHistory';
 import { PreferencesPanel } from '@/components/PreferencesPanel';
 import { usePreferences } from '@/contexts/PreferencesContext';
 
@@ -33,13 +33,18 @@ export function WeatherDashboard() {
 
     const locations = await searchCity(searchQuery);
     if (locations.length > 0) {
-      const { lat, lon, name } = locations[0];
+      const { lat, lon, name, country } = locations[0];
       
-      // Add to search history
-      addToSearchHistory({
-        query: name,
+      // Add to location history with current weather
+      addToLocationHistory({
+        name,
+        country,
         lat,
-        lon
+        lon,
+        lastWeather: weatherData ? {
+          temperature: weatherData.temperature,
+          condition: weatherData.condition
+        } : undefined
       });
 
       fetchWeather(lat, lon);
@@ -75,7 +80,7 @@ export function WeatherDashboard() {
         </button>
       </div>
 
-      <SearchHistory onSelectLocation={handleLocationSelect} />
+      <LocationHistory onSelectLocation={handleLocationSelect} />
 
       {isLoading && <div>Loading...</div>}
       {error && <div className="text-red-500">Error: {error}</div>}

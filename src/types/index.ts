@@ -23,4 +23,16 @@ export interface LocationData {
   lat: number;
   lon: number;
   country: string;
+}
+
+export interface LocationHistoryItem {
+  name: string;
+  country: string;
+  lat: number;
+  lon: number;
+  timestamp: number;
+  lastWeather?: {
+    temperature: number;
+    condition: string;
+  };
 } 
