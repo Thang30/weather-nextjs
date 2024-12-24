@@ -2,34 +2,33 @@ export interface WeatherData {
   location: string;
   temperature: number;
   condition: string;
+  description: string;
   humidity: number;
-  windSpeed?: number;
+  windSpeed: number;
   feelsLike: number;
   icon: string;
-  description: string;
   pressure: number;
   visibility: number;
-  sunrise?: number;
-  sunset?: number;
-  alerts?: WeatherAlert[];
+  sunrise: number;
+  sunset: number;
   airQuality?: {
-    aqi: number;  // 1-5 scale
+    aqi: number;
     components: {
-      co: number;   // Carbon monoxide (μg/m3)
-      no2: number;  // Nitrogen dioxide (μg/m3)
-      o3: number;   // Ozone (μg/m3)
-      pm2_5: number; // Fine particles (μg/m3)
-      pm10: number;  // Coarse particles (μg/m3)
+      co: number;
+      no2: number;
+      o3: number;
+      pm2_5: number;
+      pm10: number;
     };
   };
   precipitation?: {
-    probability: number; // 0-1
-    amount: number;     // mm
+    probability: number;
+    amount: number;
   };
-  sun: {
+  sun?: {
     sunrise: number;
     sunset: number;
-    dayLength: number; // in minutes
+    dayLength: number;
   };
 }
 

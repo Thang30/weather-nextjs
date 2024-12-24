@@ -14,21 +14,28 @@ export function useWeather() {
     setError(null);
 
     try {
-      const [weatherResponse, forecastResponse] = await Promise.all([
+      const [weatherResponse, forecastResponse, extendedResponse] = await Promise.all([
         fetch(`/api/weather?lat=${lat}&lon=${lon}`),
-        fetch(`/api/forecast?lat=${lat}&lon=${lon}`)
+        fetch(`/api/forecast?lat=${lat}&lon=${lon}`),
+        fetch(`/api/weather/extended?lat=${lat}&lon=${lon}`)
       ]);
 
-      if (!weatherResponse.ok || !forecastResponse.ok) {
+      if (!weatherResponse.ok || !forecastResponse.ok || !extendedResponse.ok) {
         throw new Error('Failed to fetch weather data');
       }
 
-      const [weather, forecast] = await Promise.all([
+      const [weather, forecast, extended] = await Promise.all([
         weatherResponse.json(),
-        forecastResponse.json()
+        forecastResponse.json(),
+        extendedResponse.json()
       ]);
 
-      setWeatherData(weather);
+      setWeatherData({
+        ...weather,
+        airQuality: extended.airQuality,
+        precipitation: extended.precipitation,
+        sun: extended.sun
+      });
       setForecastData(forecast);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
