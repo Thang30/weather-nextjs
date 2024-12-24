@@ -7,6 +7,7 @@ import { addToLocationHistory } from '@/utils/locationHistory';
 import { PreferencesPanel } from '@/components/PreferencesPanel';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { TemperatureDisplay, WindSpeedDisplay } from '@/components/UnitDisplay';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 export function WeatherDashboard() {
   const { weatherData, forecastData, isLoading, error, fetchWeather, searchCity } = useWeather();
@@ -60,13 +61,18 @@ export function WeatherDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-background-light dark:bg-background-dark transition-colors">
       {/* Header */}
-      <header className="bg-white shadow">
+      <header className="bg-surface-light dark:bg-surface-dark shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-900">Weather Dashboard</h1>
-            <PreferencesPanel />
+            <h1 className="text-2xl font-bold text-text-light dark:text-text-dark">
+              Weather Dashboard
+            </h1>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <PreferencesPanel />
+            </div>
           </div>
         </div>
       </header>
@@ -76,8 +82,8 @@ export function WeatherDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Sidebar */}
           <div className="lg:col-span-4">
-            <div className="bg-white rounded-lg shadow p-4">
-              {/* Search - Updated for better mobile responsiveness */}
+            <div className="bg-surface-light dark:bg-surface-dark rounded-lg shadow p-4">
+              {/* Search */}
               <div className="mb-6">
                 <div className="flex flex-col sm:flex-row gap-2">
                   <input
@@ -86,11 +92,11 @@ export function WeatherDashboard() {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                     placeholder="Search city..."
-                    className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full p-2 border rounded-md focus:ring-2 focus:ring-primary-light dark:focus:ring-primary-dark focus:border-transparent bg-white dark:bg-gray-700 text-text-light dark:text-text-dark"
                   />
                   <button
                     onClick={handleSearch}
-                    className="w-full sm:w-auto px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors whitespace-nowrap"
+                    className="w-full sm:w-auto px-4 py-2 bg-primary-light dark:bg-primary-dark text-white rounded-md hover:bg-blue-600 dark:hover:bg-blue-600 transition-colors whitespace-nowrap"
                   >
                     Search
                   </button>
@@ -102,7 +108,7 @@ export function WeatherDashboard() {
             </div>
           </div>
 
-          {/* Main Weather Display */}
+          {/* Weather Display */}
           <div className="lg:col-span-8">
             {isLoading && (
               <div className="flex justify-center items-center h-64">

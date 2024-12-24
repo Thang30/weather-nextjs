@@ -26,9 +26,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <PreferencesProvider>
-          {children}
-        </PreferencesProvider>
+        <PreferencesProvider>{children}</PreferencesProvider>
       </body>
     </html>
   );

@@ -6,6 +6,7 @@ import { UserPreferences, getUserPreferences, saveUserPreferences } from '@/util
 interface PreferencesContextType {
   preferences: UserPreferences;
   updatePreferences: (newPreferences: Partial<UserPreferences>) => void;
+  toggleTheme: () => void;
 }
 
 const PreferencesContext = createContext<PreferencesContextType | undefined>(undefined);
@@ -18,6 +19,12 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
     setPreferences(getUserPreferences());
   }, []);
 
+  useEffect(() => {
+    // Update document class when theme changes
+    const isDark = preferences.theme === 'dark';
+    document.documentElement.classList.toggle('dark', isDark);
+  }, [preferences.theme]);
+
   const updatePreferences = (newPreferences: Partial<UserPreferences>) => {
     setPreferences(prev => {
       const updated = { ...prev, ...newPreferences };
@@ -26,8 +33,14 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
     });
   };
 
+  const toggleTheme = () => {
+    updatePreferences({
+      theme: preferences.theme === 'dark' ? 'light' : 'dark'
+    });
+  };
+
   return (
-    <PreferencesContext.Provider value={{ preferences, updatePreferences }}>
+    <PreferencesContext.Provider value={{ preferences, updatePreferences, toggleTheme }}>
       {children}
     </PreferencesContext.Provider>
   );
