@@ -5,7 +5,6 @@ export interface WeatherData {
   windSpeed: number;
   icon: string;
   location: string;
-  // Add other relevant weather fields
 }
 
 export interface ForecastData {
@@ -17,7 +16,6 @@ export interface ForecastData {
       icon: string;
     }>;
   }>;
-  // Add other relevant forecast fields
 }
 
 export interface LocationData {
