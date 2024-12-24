@@ -1,4 +1,3 @@
-import { LocationData } from '@/types';
 
 interface ApiResponse<T> {
   data?: T;

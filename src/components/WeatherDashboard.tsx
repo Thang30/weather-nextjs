@@ -37,12 +37,12 @@ export function WeatherDashboard(): JSX.Element {
     }
   }, [fetchWeather, preferences.defaultLocation]);
 
-  const convertTemperature = (celsius: number): number => {
-    if (preferences.temperatureUnit === 'fahrenheit') {
-      return (celsius * 9/5) + 32;
-    }
-    return celsius;
-  };
+  // const convertTemperature = (celsius: number): number => {
+  //   if (preferences.temperatureUnit === 'fahrenheit') {
+  //     return (celsius * 9/5) + 32;
+  //   }
+  //   return celsius;
+  // };
 
   const handleSearch = useDebouncedCallback(async (term: string) => {
     if (!term.trim()) {
