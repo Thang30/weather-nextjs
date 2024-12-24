@@ -2,7 +2,9 @@ import { NextResponse } from 'next/server';
 
 interface ForecastItem {
   dt: number;
-  temp: number;
+  main: {
+    temp: number;
+  };
   weather: Array<{
     description: string;
     icon: string;
@@ -34,7 +36,20 @@ export async function GET(request: Request) {
       throw new Error('Failed to fetch forecast');
     }
 
-    const data = (await response.json()) as ForecastResponse;
+    const rawData = await response.json();
+    
+    // Transform the data to match our expected format
+    const data = {
+      list: rawData.list.map((item: ForecastItem) => ({
+        dt: item.dt,
+        temp: Math.round(item.main.temp),
+        weather: item.weather.map(w => ({
+          description: w.description,
+          icon: w.icon
+        }))
+      }))
+    };
+
     return NextResponse.json(data);
   } catch (error) {
     if (error instanceof Error) {
