@@ -3,8 +3,5 @@
   "buildCommand": "next build",
   "devCommand": "next dev",
   "installCommand": "npm install",
-  "framework": "nextjs",
-  "env": {
-    "NEXT_PUBLIC_OPENWEATHER_API_KEY": "@openweather_api_key"
-  }
+  "framework": "nextjs"
 } 
