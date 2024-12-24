@@ -1,5 +1,6 @@
 export interface UserPreferences {
   temperatureUnit: 'celsius' | 'fahrenheit';
+  speedUnit: 'ms' | 'kmh' | 'mph';
   theme: 'light' | 'dark' | 'system';
   defaultLocation?: {
     name: string;
@@ -12,6 +13,7 @@ const PREFERENCES_KEY = 'weatherAppPreferences';
 
 const DEFAULT_PREFERENCES: UserPreferences = {
   temperatureUnit: 'celsius',
+  speedUnit: 'ms',
   theme: 'system',
 };
 

@@ -4,6 +4,7 @@ import { LocationHistory } from '@/components/LocationHistory';
 import { addToLocationHistory } from '@/utils/locationHistory';
 import { PreferencesPanel } from '@/components/PreferencesPanel';
 import { usePreferences } from '@/contexts/PreferencesContext';
+import { TemperatureDisplay, WindSpeedDisplay } from '@/components/UnitDisplay';
 
 export function WeatherDashboard() {
   const { weatherData, forecastData, isLoading, error, fetchWeather, searchCity } = useWeather();
@@ -88,12 +89,10 @@ export function WeatherDashboard() {
       {weatherData && (
         <div className="weather-info mt-4">
           <h2 className="text-2xl font-bold">{weatherData.location}</h2>
-          <p>Temperature: {convertTemperature(weatherData.temperature)}°
-            {preferences.temperatureUnit === 'celsius' ? 'C' : 'F'}
-          </p>
+          <p>Temperature: <TemperatureDisplay value={weatherData.temperature} /></p>
           <p>Condition: {weatherData.condition}</p>
           <p>Humidity: {weatherData.humidity}%</p>
-          <p>Wind Speed: {weatherData.windSpeed} m/s</p>
+          <p>Wind Speed: <WindSpeedDisplay value={weatherData.windSpeed} /></p>
         </div>
       )}
 
