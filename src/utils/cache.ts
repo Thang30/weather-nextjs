@@ -1,55 +1,65 @@
-import { cache } from 'react';
-import 'server-only';
+import { WeatherData, ForecastData, LocationData } from '@/types';
 
-// Cache durations in seconds
-export const CACHE_DURATIONS = {
-  WEATHER: 300,      // 5 minutes for current weather
-  FORECAST: 1800,    // 30 minutes for forecast
-  LOCATION: 86400,   // 24 hours for location data
-} as const;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-// Type for cache tags
-export type CacheTag = 'weather' | 'forecast' | 'location';
-
-// Cache invalidation function
-export async function invalidateCache(tag: CacheTag) {
-  try {
-    await fetch('/api/revalidate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ tag }),
-    });
-  } catch (error) {
-    console.error('Failed to invalidate cache:', error);
-  }
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
 }
 
-// Cached data fetching utilities
-export const getCachedWeather = cache(async (lat: number, lon: number) => {
-  // Implementation will be added when API key is ready
-  return null;
-});
-
-export const getCachedForecast = cache(async (lat: number, lon: number) => {
-  // Implementation will be added when API key is ready
-  return null;
-});
-
-export const getCachedLocation = cache(async (query: string) => {
-  // Implementation will be added when API key is ready
-  return null;
-});
-
-export async function getWeatherFromCache(_lat: number, _lon: number) {
-  // Implementation
+interface WeatherCache {
+  weather: { [key: string]: CacheEntry<WeatherData> };
+  forecast: { [key: string]: CacheEntry<ForecastData> };
+  search: { [key: string]: CacheEntry<LocationData[]> };
 }
 
-export async function getForecastFromCache(_lat: number, _lon: number) {
-  // Implementation
+const cache: WeatherCache = {
+  weather: {},
+  forecast: {},
+  search: {}
+};
+
+function isCacheValid<T>(entry?: CacheEntry<T>): boolean {
+  if (!entry) return false;
+  return Date.now() - entry.timestamp < CACHE_DURATION;
 }
 
-export async function getSearchResultsFromCache(_query: string) {
-  // Implementation
+function getCacheKey(type: keyof WeatherCache, params: Record<string, string | number>): string {
+  return Object.entries(params)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, value]) => `${key}:${value}`)
+    .join('|');
+}
+
+export async function getWeatherFromCache(lat: number, lon: number): Promise<WeatherData | null> {
+  const key = getCacheKey('weather', { lat, lon });
+  const entry = cache.weather[key];
+  return isCacheValid(entry) ? entry.data : null;
+}
+
+export async function getForecastFromCache(lat: number, lon: number): Promise<ForecastData | null> {
+  const key = getCacheKey('forecast', { lat, lon });
+  const entry = cache.forecast[key];
+  return isCacheValid(entry) ? entry.data : null;
+}
+
+export async function getSearchResultsFromCache(query: string): Promise<LocationData[] | null> {
+  const key = getCacheKey('search', { query });
+  const entry = cache.search[key];
+  return isCacheValid(entry) ? entry.data : null;
+}
+
+export function setWeatherCache(lat: number, lon: number, data: WeatherData): void {
+  const key = getCacheKey('weather', { lat, lon });
+  cache.weather[key] = { data, timestamp: Date.now() };
+}
+
+export function setForecastCache(lat: number, lon: number, data: ForecastData): void {
+  const key = getCacheKey('forecast', { lat, lon });
+  cache.forecast[key] = { data, timestamp: Date.now() };
+}
+
+export function setSearchCache(query: string, data: LocationData[]): void {
+  const key = getCacheKey('search', { query });
+  cache.search[key] = { data, timestamp: Date.now() };
 } 
