@@ -11,9 +11,9 @@ interface ForecastItem {
   }>;
 }
 
-interface ForecastResponse {
-  list: ForecastItem[];
-}
+// interface ForecastResponse {
+//   list: ForecastItem[];
+// }
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
