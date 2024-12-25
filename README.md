@@ -1,6 +1,6 @@
 # Weather Dashboard
 
-A responsive weather dashboard built with Next.js 15 that provides real-time weather information. Check out the live demo: [Weather Dashboard](https://weather-nextjs-9lskdpi3r-thomas-projects-701af544.vercel.app/)
+A responsive weather dashboard built with Next.js 15 that provides real-time weather information. Check out the live demo: [weather-nextjs-rose.vercel.app](https://weather-nextjs-rose.vercel.app/)
 
 ## Features
 
